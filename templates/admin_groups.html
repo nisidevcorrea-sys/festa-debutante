@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Grupos - Admin{% endblock %}
+
+{% block content %}
+<section class="admin-groups py-5">
+    <div class="container-fluid pt-5">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="display-6">
+                    <i class="fas fa-users"></i> Gerenciar Grupos
+                </h1>
+                <p class="text-muted">Organize convidados em famílias ou grupos</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
+                    <i class="fas fa-plus"></i> Adicionar Grupo
+                </button>
+            </div>
+        </div>
+
+        <!-- Groups Cards -->
+        <div class="row">
+            {% for group in groups %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card group-card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users"></i> {{ group.group_name }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if group.description %}
+                        <p class="text-muted mb-3">{{ group.description }}</p>
+                        {% endif %}
+                        
+                        <div class="stats mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total:</span>
+                                <strong>{{ group.guests|length }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Confirmados:</span>
+                                <span class="badge bg-success">
+                                    {{ group.guests|selectattr('status', 'equalto', 'confirmado')|list|length }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Pendentes:</span>
+                                <span class="badge bg-warning text-dark">
+                                    {{ group.guests|selectattr('status', 'equalto', 'pendente')|list|length }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="members-list">
+                            <h6 class="mb-2">Membros:</h6>
+                            <ul class="list-unstyled mb-0">
+                                {% for guest in group.guests[:5] %}
+                                <li class="mb-1">
+                                    <i class="fas fa-user"></i> {{ guest.name }}
+                                </li>
+                                {% endfor %}
+                                {% if group.guests|length > 5 %}
+                                <li class="text-muted">
+                                    <small>+ {{ group.guests|length - 5 }} mais...</small>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteGroup({{ group.id }}, '{{ group.group_name }}')">
+                            <i class="fas fa-trash"></i> Excluir Grupo
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not groups %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-3x mb-3"></i>
+            <h4>Nenhum grupo cadastrado</h4>
+            <p>Crie grupos para organizar melhor seus convidados!</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Add Group Modal -->
+<div class="modal fade" id="addGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-users"></i> Adicionar Grupo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addGroupForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Grupo *</label>
+                        <input type="text" class="form-control" name="group_name" required placeholder="Ex: Família Silva">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Descrição opcional do grupo"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveGroup()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function saveGroup() {
+    const formData = new FormData($('#addGroupForm')[0]);
+    const data = {
+        group_name: formData.get('group_name'),
+        description: formData.get('description')
+    };
+    
+    $.ajax({
+        url: '/api/admin/group',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                alert('Grupo adicionado com sucesso!');
+                location.reload();
+            }
+        },
+        error: function() {
+            alert('Erro ao adicionar grupo');
+        }
+    });
+}
+
+function deleteGroup(groupId, groupName) {
+    if (!confirm(`Tem certeza que deseja excluir o grupo "${groupName}"? Os convidados não serão removidos, apenas o agrupamento.`)) {
+        return;
+    }
+    
+    $.ajax({
+        url: `/api/admin/group/${groupId}`,
+        method: 'DELETE',
+        success: function(response) {
+            if (response.success) {
+                alert('Grupo removido com sucesso!');
+                location.reload();
+            }
+        },
+        error: function() {
+            alert('Erro ao remover grupo');
+        }
+    });
+}
+</script>
+
+<style>
+.admin-groups {
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+.group-card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.group-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.members-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}

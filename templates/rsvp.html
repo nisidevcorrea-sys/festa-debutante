@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar Presença - Festa de 15 Anos{% endblock %}
+
+{% block content %}
+<section class="rsvp-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <h2 class="mb-0">
+                            <i class="fas fa-check-circle"></i> Confirmar Presença
+                        </h2>
+                        <p class="mb-0 mt-2">Por favor, confirme sua presença até o mais breve possível</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Search Form -->
+                        <div class="search-section mb-4">
+                            <label class="form-label fw-bold">Busque seu nome na lista de convidados:</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="searchInput" 
+                                    placeholder="Digite seu nome..."
+                                    autocomplete="off"
+                                >
+                            </div>
+                            <small class="form-text text-muted">
+                                Digite pelo menos 2 letras para buscar
+                            </small>
+                        </div>
+
+                        <!-- Search Results -->
+                        <div id="searchResults" class="search-results d-none">
+                            <h5 class="mb-3">Resultados da busca:</h5>
+                            <div id="guestsList"></div>
+                        </div>
+
+                        <!-- Confirmation Form -->
+                        <div id="confirmationForm" class="confirmation-form d-none">
+                            <hr class="my-4">
+                            <h5 class="mb-3">Confirme sua presença:</h5>
+                            <div id="selectedGuests"></div>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button class="btn btn-success btn-lg" onclick="confirmPresence('confirmado')">
+                                    <i class="fas fa-check"></i> Sim, vou comparecer!
+                                </button>
+                                <button class="btn btn-danger btn-lg" onclick="confirmPresence('nao_confirmado')">
+                                    <i class="fas fa-times"></i> Não poderei comparecer
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Success Message -->
+                        <div id="successMessage" class="alert alert-success d-none mt-4" role="alert">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-check-circle"></i> Confirmação realizada com sucesso!
+                            </h5>
+                            <p class="mb-0">Obrigada por confirmar sua presença. Aguardamos você com muito carinho!</p>
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="info-box mt-4">
+                            <h6><i class="fas fa-info-circle"></i> Informações Importantes:</h6>
+                            <ul class="mb-0">
+                                <li>A confirmação pode ser feita em grupo (família)</li>
+                                <li>Se não encontrar seu nome, entre em contato conosco</li>
+                                <li>Você pode alterar sua confirmação a qualquer momento</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let searchTimeout;
+let selectedGuestIds = [];
+
+// Buscar convidados
+$('#searchInput').on('input', function() {
+    const searchTerm = $(this).val().trim();
+    
+    if (searchTerm.length < 2) {
+        $('#searchResults').addClass('d-none');
+        return;
+    }
+    
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchGuests(searchTerm);
+    }, 300);
+});
+
+function searchGuests(term) {
+    $.ajax({
+        url: '/api/search-guests',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ search: term }),
+        success: function(response) {
+            displaySearchResults(response.guests);
+        },
+        error: function() {
+            alert('Erro ao buscar convidados. Tente novamente.');
+        }
+    });
+}
+
+function displaySearchResults(guests) {
+    const $guestsList = $('#guestsList');
+    $guestsList.empty();
+    
+    if (guests.length === 0) {
+        $guestsList.html(`
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> 
+                Nenhum convidado encontrado com este nome.
+            </div>
+        `);
+        $('#searchResults').removeClass('d-none');
+        return;
+    }
+    
+    guests.forEach(guest => {
+        const statusBadge = getStatusBadge(guest.status);
+        const groupInfo = guest.group ? `
+            <small class="text-muted d-block">
+                <i class="fas fa-users"></i> ${guest.group.name} 
+                (${guest.group.members.length} pessoa${guest.group.members.length > 1 ? 's' : ''})
+            </small>
+        ` : '';
+        
+        const card = `
+            <div class="card guest-card mb-2" data-guest-id="${guest.id}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${guest.name}</h6>
+                            ${groupInfo}
+                        </div>
+                        <div>
+                            ${statusBadge}
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-primary btn-sm" onclick="selectGuest(${guest.id}, ${JSON.stringify(guest).replace(/"/g, '&quot;')})">
+                            <i class="fas fa-hand-pointer"></i> Selecionar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        $guestsList.append(card);
+    });
+    
+    $('#searchResults').removeClass('d-none');
+}
+
+function getStatusBadge(status) {
+    const badges = {
+        'confirmado': '<span class="badge bg-success">Confirmado</span>',
+        'nao_confirmado': '<span class="badge bg-danger">Não confirmado</span>',
+        'pendente': '<span class="badge bg-warning text-dark">Pendente</span>'
+    };
+    return badges[status] || badges['pendente'];
+}
+
+function selectGuest(guestId, guestData) {
+    selectedGuestIds = [guestId];
+    
+    const $selectedGuests = $('#selectedGuests');
+    $selectedGuests.empty();
+    
+    // Adicionar convidado principal
+    $selectedGuests.append(`
+        <div class="alert alert-info">
+            <h6><i class="fas fa-user"></i> ${guestData.name}</h6>
+        </div>
+    `);
+    
+    // Se tiver grupo, mostrar opção de confirmar grupo
+    if (guestData.group && guestData.group.members.length > 1) {
+        $selectedGuests.append(`
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6><i class="fas fa-users"></i> Confirmar grupo inteiro?</h6>
+                    <p class="mb-2">Membros do grupo ${guestData.group.name}:</p>
+                    <div class="form-check" id="groupMembers"></div>
+                </div>
+            </div>
+        `);
+        
+        guestData.group.members.forEach(member => {
+            const checked = member.id === guestId ? 'checked' : '';
+            $('#groupMembers').append(`
+                <div class="form-check mb-2">
+                    <input 
+                        class="form-check-input group-member-checkbox" 
+                        type="checkbox" 
+                        value="${member.id}" 
+                        id="member${member.id}"
+                        ${checked}
+                    >
+                    <label class="form-check-label" for="member${member.id}">
+                        ${member.name} ${getStatusBadge(member.status)}
+                    </label>
+                </div>
+            `);
+        });
+        
+        // Atualizar seleção ao clicar nos checkboxes
+        $('.group-member-checkbox').on('change', function() {
+            selectedGuestIds = $('.group-member-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+        });
+    }
+    
+    $('#confirmationForm').removeClass('d-none');
+    $('#successMessage').addClass('d-none');
+    
+    // Scroll suave para o formulário
+    $('html, body').animate({
+        scrollTop: $('#confirmationForm').offset().top - 100
+    }, 500);
+}
+
+function confirmPresence(status) {
+    if (selectedGuestIds.length === 0) {
+        alert('Nenhum convidado selecionado');
+        return;
+    }
+    
+    const confirmMsg = status === 'confirmado' 
+        ? 'Confirmar presença?' 
+        : 'Confirmar que NÃO poderá comparecer?';
+    
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+    
+    $.ajax({
+        url: '/api/confirm-presence',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            guest_ids: selectedGuestIds,
+            status: status
+        }),
+        success: function(response) {
+            if (response.success) {
+                $('#confirmationForm').addClass('d-none');
+                $('#searchResults').addClass('d-none');
+                $('#searchInput').val('');
+                $('#successMessage').removeClass('d-none');
+                
+                // Scroll para mensagem de sucesso
+                $('html, body').animate({
+                    scrollTop: $('#successMessage').offset().top - 100
+                }, 500);
+            } else {
+                alert('Erro: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Erro ao confirmar presença. Tente novamente.');
+        }
+    });
+}
+</script>
+
+<style>
+.rsvp-section {
+    min-height: 100vh;
+    padding-top: 100px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.guest-card {
+    transition: all 0.3s;
+    border-left: 4px solid #667eea;
+}
+
+.guest-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.info-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.confirmation-form {
+    animation: slideIn 0.5s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}

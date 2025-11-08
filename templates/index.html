@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Bem-vindo à Minha Festa de 15 Anos{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="container text-center text-white">
+            <h1 class="display-1 fancy-text mb-4 animate-fade-in">
+                {% if venue %}
+                    {{ venue.debutante_name }}
+                {% else %}
+                    Minha Festa de 15 Anos
+                {% endif %}
+            </h1>
+            <p class="lead mb-4 animate-fade-in-delay-1">
+                <i class="fas fa-crown"></i> Uma noite mágica e inesquecível <i class="fas fa-crown"></i>
+            </p>
+            {% if venue %}
+            <div class="date-box animate-fade-in-delay-2">
+                <h3 class="mb-0">{{ venue.event_date.strftime('%d/%m/%Y') }}</h3>
+                <p class="mb-0">{{ venue.ceremony_time }}</p>
+            </div>
+            {% endif %}
+            <div class="mt-5 animate-fade-in-delay-3">
+                <a href="{{ url_for('rsvp') }}" class="btn btn-primary btn-lg mx-2 mb-2">
+                    <i class="fas fa-check-circle"></i> Confirmar Presença
+                </a>
+                <a href="{{ url_for('venue') }}" class="btn btn-outline-light btn-lg mx-2 mb-2">
+                    <i class="fas fa-map-marker-alt"></i> Ver Local
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="image-placeholder">
+                    <i class="fas fa-birthday-cake"></i>
+                    <p>Foto da Debutante</p>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <h2 class="section-title mb-4">Uma Noite Especial</h2>
+                <p class="lead">
+                    Chegou o momento tão esperado! Estou completando 15 anos e gostaria muito de 
+                    compartilhar essa data especial com você.
+                </p>
+                <p>
+                    Prepare-se para uma noite mágica, cheia de emoção, dança e muita alegria. 
+                    Será uma celebração inesquecível e sua presença é fundamental para tornar 
+                    este momento ainda mais especial!
+                </p>
+                {% if venue and venue.theme %}
+                <div class="theme-info mt-4 p-3 bg-light rounded">
+                    <h5><i class="fas fa-palette"></i> Tema da Festa</h5>
+                    <p class="mb-2"><strong>{{ venue.theme }}</strong></p>
+                    {% if venue.color_scheme %}
+                    <p class="mb-0"><i class="fas fa-swatchbook"></i> Cores: {{ venue.color_scheme }}</p>
+                    {% endif %}
+                    {% if venue.dress_code %}
+                    <p class="mb-0"><i class="fas fa-tshirt"></i> Traje: {{ venue.dress_code }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Timeline Section -->
+<section class="timeline-section py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Programação da Noite</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card timeline-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="timeline-icon mb-3">
+                            <i class="fas fa-church"></i>
+                        </div>
+                        <h4>Cerimônia</h4>
+                        {% if venue %}
+                        <p class="text-primary fw-bold">{{ venue.ceremony_time or 'A definir' }}</p>
+                        {% endif %}
+                        <p>Momento da valsa e homenagens especiais</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card timeline-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="timeline-icon mb-3">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <h4>Jantar</h4>
+                        <p class="text-primary fw-bold">Logo após a cerimônia</p>
+                        <p>Deliciosa recepção com buffet completo</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card timeline-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="timeline-icon mb-3">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <h4>Festa</h4>
+                        {% if venue %}
+                        <p class="text-primary fw-bold">{{ venue.party_time or 'A definir' }}</p>
+                        {% endif %}
+                        <p>Música, dança e muita diversão!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5">
+    <div class="container text-center">
+        <h2 class="mb-4">Sua Presença é Muito Importante!</h2>
+        <p class="lead mb-4">
+            Por favor, confirme sua presença até o mais breve possível para que possamos nos organizar melhor.
+        </p>
+        <a href="{{ url_for('rsvp') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-check-circle"></i> Confirmar Presença Agora
+        </a>
+    </div>
+</section>
+
+<!-- Quick Links -->
+<section class="quick-links-section py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-sm-6 mb-4">
+                <a href="{{ url_for('court') }}" class="quick-link-card">
+                    <i class="fas fa-users fa-3x mb-3 text-primary"></i>
+                    <h5>Corte de Honra</h5>
+                    <p>Conheça minhas damas e cavalheiros</p>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <a href="{{ url_for('gifts') }}" class="quick-link-card">
+                    <i class="fas fa-gift fa-3x mb-3 text-primary"></i>
+                    <h5>Lista de Presentes</h5>
+                    <p>Veja sugestões de presentes</p>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <a href="{{ url_for('venue') }}" class="quick-link-card">
+                    <i class="fas fa-map-marker-alt fa-3x mb-3 text-primary"></i>
+                    <h5>Local da Festa</h5>
+                    <p>Endereço e como chegar</p>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <a href="{{ url_for('rsvp') }}" class="quick-link-card">
+                    <i class="fas fa-envelope fa-3x mb-3 text-primary"></i>
+                    <h5>Confirmar Presença</h5>
+                    <p>RSVP Online</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        position: relative;
+        height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-image: url('https://images.unsplash.com/photo-1464047736614-af63643285bf?w=1920');
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(102, 126, 234, 0.85);
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .date-box {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        display: inline-block;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 1s ease-in;
+    }
+    
+    .animate-fade-in-delay-1 {
+        animation: fadeIn 1s ease-in 0.3s backwards;
+    }
+    
+    .animate-fade-in-delay-2 {
+        animation: fadeIn 1s ease-in 0.6s backwards;
+    }
+    
+    .animate-fade-in-delay-3 {
+        animation: fadeIn 1s ease-in 0.9s backwards;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .image-placeholder {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 4rem;
+    }
+    
+    .timeline-card {
+        transition: transform 0.3s;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .timeline-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .timeline-icon {
+        font-size: 3rem;
+        color: #667eea;
+    }
+    
+    .quick-link-card {
+        display: block;
+        padding: 30px;
+        background: white;
+        border-radius: 15px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s;
+        height: 100%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .quick-link-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        color: inherit;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+</style>
+{% endblock %}

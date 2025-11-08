@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Presentes - Festa de 15 Anos{% endblock %}
+
+{% block content %}
+<section class="gifts-section py-5">
+    <div class="container">
+        <div class="text-center mb-5 pt-5">
+            <h1 class="display-4 fancy-text">
+                <i class="fas fa-gift"></i> Lista de Presentes
+            </h1>
+            <p class="lead text-muted">
+                Sugestões de presentes para tornar este momento ainda mais especial
+            </p>
+        </div>
+
+        {% if gifts_by_category %}
+            {% for category, gifts in gifts_by_category.items() %}
+            <div class="category-section mb-5">
+                <h3 class="category-title mb-4">
+                    <i class="fas fa-tag"></i> {{ category }}
+                </h3>
+                <div class="row">
+                    {% for gift in gifts %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card gift-card h-100 {% if gift.reserved %}reserved{% endif %}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title">{{ gift.item_name }}</h5>
+                                    {% if gift.reserved %}
+                                    <span class="badge bg-secondary">Reservado</span>
+                                    {% elif gift.priority == 'alta' %}
+                                    <span class="badge bg-danger">Prioridade</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if gift.description %}
+                                <p class="card-text text-muted">{{ gift.description }}</p>
+                                {% endif %}
+                                
+                                {% if gift.price %}
+                                <p class="gift-price">
+                                    <i class="fas fa-tag"></i> 
+                                    R$ {{ "%.2f"|format(gift.price) }}
+                                </p>
+                                {% endif %}
+                                
+                                {% if gift.store_name %}
+                                <p class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-store"></i> {{ gift.store_name }}
+                                    </small>
+                                </p>
+                                {% endif %}
+                                
+                                {% if gift.store_link and not gift.reserved %}
+                                <a href="{{ gift.store_link }}" target="_blank" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-shopping-cart"></i> Ver na Loja
+                                </a>
+                                {% elif gift.reserved %}
+                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                    <i class="fas fa-check"></i> Já Reservado
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-3x mb-3"></i>
+                <h4>Lista de presentes em breve!</h4>
+                <p>Estamos preparando nossa lista de presentes com muito carinho. Volte em breve!</p>
+            </div>
+        {% endif %}
+
+        <!-- Mensagem Especial -->
+        <div class="card special-message mt-5">
+            <div class="card-body text-center p-5">
+                <i class="fas fa-heart fa-3x text-danger mb-3"></i>
+                <h4 class="mb-3">Sua Presença é o Maior Presente!</h4>
+                <p class="lead">
+                    Lembre-se: o mais importante é ter você conosco neste dia especial. 
+                    Os presentes são apenas uma sugestão para aqueles que desejarem presentear.
+                </p>
+                <hr class="my-4">
+                <p class="mb-0">
+                    <i class="fas fa-info-circle"></i> 
+                    Caso prefira, também aceitamos contribuições em dinheiro para ajudar a realizar sonhos!
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.gifts-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.category-title {
+    color: #667eea;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+.gift-card {
+    transition: all 0.3s;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.gift-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.gift-card.reserved {
+    opacity: 0.7;
+    background: #f8f9fa;
+}
+
+.gift-price {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #667eea;
+    margin: 15px 0;
+}
+
+.special-message {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.fancy-text {
+    font-family: 'Great Vibes', cursive;
+}
+</style>
+{% endblock %}
