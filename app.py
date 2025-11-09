@@ -7,10 +7,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# CORREÇÃO: Garantir que DATABASE_URL seja configurada corretamente
-database_url = os.getenv('DATABASE_URL')
+# CORREÇÃO CRÍTICA: Render usa postgres:// mas SQLAlchemy precisa postgresql://
+database_url = os.getenv('DATABASE_URL', 'postgresql://localhost/debutante_rsvp')
 if database_url and database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SECRET_KEY'] = os.getenv('SESSION_SECRET', 'chave-secreta-debutante-2024')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'postgresql://localhost/debutante_rsvp'
