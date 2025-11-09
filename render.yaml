@@ -1,15 +1,24 @@
 services:
   - type: web
-    name: debutante-festa
-    env: python
-    region: oregon
+    name: festa-debutante
+    runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn app:app
     envVars:
-    - key: PYTHON_VERSION
+      - key: PYTHON_VERSION
         value: 3.11.9
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: debutante-db
+          property: connectionString
       - key: SESSION_SECRET
         generateValue: true
+      - key: FLASK_ENV
+        value: production
+
+databases:
+  - name: debutante-db
+    plan: free
+    databaseName: debutante_rsvp
+    user: debutante_user
