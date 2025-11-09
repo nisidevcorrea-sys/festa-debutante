@@ -3,11 +3,15 @@ services:
     name: festa-debutante
     runtime: python
     plan: free
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    region: oregon
+    buildCommand: |
+      python --version
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: "3.11.9"
       - key: DATABASE_URL
         fromDatabase:
           name: debutante-db
@@ -16,9 +20,11 @@ services:
         generateValue: true
       - key: FLASK_ENV
         value: production
+    autoDeploy: true
 
 databases:
   - name: debutante-db
     plan: free
     databaseName: debutante_rsvp
     user: debutante_user
+    ipAllowList: []
